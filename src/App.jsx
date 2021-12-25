@@ -9,8 +9,15 @@ const bundleDropModule = sdk.getBundleDropModule(
 );
 
 const App = () => {
-  const { connectWallet, address } = useWeb3();
+  const { connectWallet, address, error, provider } = useWeb3();
   const [hasClaimedNFT, setHasClaimedNFT] = React.useState(false);
+  const [isClaiming, setIsClaiming] = React.useState(false);
+
+  const signer = provider ? provider.getSigner() : undefined;
+
+  React.useEffect(() => {
+    sdk.setProviderOrSigner(signer);
+  }, [signer]);
 
   React.useEffect(() => {
     console.log("👋 Address:", address);
@@ -37,6 +44,22 @@ const App = () => {
     fetchBalance();
   }, [address]);
 
+  const mintNft = React.useCallback(async () => {
+    setIsClaiming(true);
+    try {
+      await bundleDropModule.claim("0", 1);
+      setHasClaimedNFT(true);
+      console.log(
+        `🌊 Successfully Minted! Check it out on OpenSea: https://testnets.opensea.io/assets/${bundleDropModule.address}/0`
+      );
+    } catch (e) {
+      setHasClaimedNFT(false);
+      console.error("failed to claim", e);
+    }
+
+    setIsClaiming(false);
+  }, []);
+
   if (!address) {
     return (
       <div className="landing">
@@ -49,8 +72,11 @@ const App = () => {
   }
 
   return (
-    <div className="landing">
-      <h1>👀 wallet connected, now what!</h1>
+    <div className="mint-nft">
+      <h1>Mint your free 🍪DAO Membership NFT</h1>
+      <button disabled={isClaiming} onClick={mintNft}>
+        {isClaiming ? "Minting..." : "Mint your nft (FREE)"}
+      </button>
     </div>
   );
 };
