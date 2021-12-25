@@ -2,6 +2,7 @@ import React from "react";
 import { ThirdwebSDK } from "@3rdweb/sdk";
 import { useWeb3 } from "@3rdweb/hooks";
 import { ethers } from "ethers";
+import { Dashboard } from "./Dashboard";
 
 const sdk = new ThirdwebSDK("rinkeby");
 
@@ -12,10 +13,6 @@ const bundleDropModule = sdk.getBundleDropModule(
 const tokenModule = sdk.getTokenModule(
   "0x16F5F60FB05E965382Bf19ee55982E3B7984b69a"
 );
-
-const shortenAddress = (str) => {
-  return str.substring(0, 6) + "..." + str.substring(str.length - 4);
-};
 
 const App = () => {
   const { connectWallet, address, error, provider } = useWeb3();
@@ -134,12 +131,7 @@ const App = () => {
   }
 
   if (hasClaimedNFT) {
-    return (
-      <div className="member-page">
-        <h1>🍪DAO Member Page</h1>
-        <p>Congratulations on being a member</p>
-      </div>
-    );
+    return <Dashboard memberList={memberList} />;
   }
 
   return (
