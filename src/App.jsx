@@ -14,6 +14,10 @@ const tokenModule = sdk.getTokenModule(
   "0x16F5F60FB05E965382Bf19ee55982E3B7984b69a"
 );
 
+const voteModule = sdk.getVoteModule(
+  "0x3d76b0075C7ef693A94bFf5bb81c1c6e025eF0d3"
+);
+
 const App = () => {
   const { connectWallet, address, error, provider } = useWeb3();
   const [hasClaimedNFT, setHasClaimedNFT] = React.useState(false);
@@ -21,6 +25,10 @@ const App = () => {
 
   const [memberTokenAmounts, setMemberTokenAmounts] = React.useState({});
   const [memberAddresses, setMemberAddresses] = React.useState([]);
+
+  const [proposals, setProposals] = React.useState([]);
+  const [isVoting, setIsVoting] = React.useState(false);
+  const [hasVoted, setHasVoted] = React.useState(false);
 
   const signer = provider ? provider.getSigner() : undefined;
 
@@ -107,6 +115,25 @@ const App = () => {
     fetchTokenBalances();
   }, [hasClaimedNFT]);
 
+  React.useEffect(() => {
+    if (!hasClaimedNFT) {
+      return;
+    }
+
+    const fetchProposals = async () => {
+      try {
+        const proposals = await voteModule.getAll();
+
+        setProposals(proposals);
+        console.log("🌈 Proposals:", proposals);
+      } catch (e) {
+        console.error("failed to get proposals", e);
+      }
+    };
+
+    fetchProposals();
+  }, [hasClaimedNFT]);
+
   const memberList = React.useMemo(() => {
     return memberAddresses.map((address) => {
       return {
@@ -118,6 +145,32 @@ const App = () => {
       };
     });
   }, [memberAddresses, memberTokenAmounts]);
+
+  React.useEffect(() => {
+    if (!hasClaimedNFT || !proposals.length) {
+      return;
+    }
+
+    const checkVoteStatus = async () => {
+      // Check if the user has already voted on the first proposal.
+      try {
+        const hasVoted = await voteModule.hasVoted(
+          proposals[0].proposalId,
+          address
+        );
+        setHasVoted(hasVoted);
+        if (hasVoted) {
+          console.log("🥵 User has already voted");
+        } else {
+          console.log("🥵 User hasn't voted yet");
+        }
+      } catch (e) {
+        console.error("failed to check if wallet has voted", e);
+      }
+    };
+
+    checkVoteStatus();
+  }, [hasClaimedNFT, proposals, address]);
 
   if (!address) {
     return (
@@ -131,7 +184,19 @@ const App = () => {
   }
 
   if (hasClaimedNFT) {
-    return <Dashboard memberList={memberList} />;
+    return (
+      <Dashboard
+        tokenModule={tokenModule}
+        voteModule={voteModule}
+        address={address}
+        memberList={memberList}
+        proposals={proposals}
+        isVoting={isVoting}
+        hasVoted={hasVoted}
+        setIsVoting={setIsVoting}
+        setHasVoted={setHasVoted}
+      />
+    );
   }
 
   return (
