@@ -71,6 +71,15 @@ const App = () => {
     );
   }
 
+  if (hasClaimedNFT) {
+    return (
+      <div className="member-page">
+        <h1>🍪DAO Member Page</h1>
+        <p>Congratulations on being a member</p>
+      </div>
+    );
+  }
+
   return (
     <div className="mint-nft">
       <h1>Mint your free 🍪DAO Membership NFT</h1>
